@@ -17,6 +17,7 @@ def get_state_reward(s, action):
     # action: "jump", "left" or "right"
     if(action in ["jump", "left", "right"]): # Only if valid action
         s.send(str(action).encode())  # Send the actionion (as string) to the server  
+    print("action:", action)
     data = ""
     data_recv = False
     while(not data_recv):
@@ -30,6 +31,7 @@ def get_state_reward(s, action):
     # Convert the received data to variables
     state = data['estado']       # 'estado' means state
     reward = data['recompensa']  # 'recompensa' means reward
-
+    print("state:", state)
+    print("reward:", reward)
     return state, reward  # Return the state and reward
 
