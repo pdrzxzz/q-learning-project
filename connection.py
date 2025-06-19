@@ -31,7 +31,7 @@ def get_state_reward(s, action):
     # Convert the received data to variables
     state = data['estado']       # 'estado' means state
     reward = data['recompensa']  # 'recompensa' means reward
-    print("state:", state)
-    print("reward:", reward)
+    print("state:", state) # state: 00(North), 01(East), 10(South), 11(West)
+    print("reward:", reward) # reward: negative int from -14 to -1
     return state, reward  # Return the state and reward
 
