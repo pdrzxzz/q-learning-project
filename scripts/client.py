@@ -1,19 +1,23 @@
 import connection
 
-# connect to game
+# Before running this, ensure to be running the game first (/windows_exec, /linux_exec, /max_exec).
+
+# Connect to game
 socket = connection.connect(2037)
+if socket == 0: # If fail to connect
+    exit() # Stop execution
 
-# read data/q_table.txt
+# Read data/q_table.txt
 
-# read actual state
+# Read actual state
 state, reward = connection.get_state_reward(socket, "none")
 
-# take best action based on q_table
-    # retrieves best action based on state
+# Take best action based on q_table
+    # Retrieves best action based on state
 
-    # do the action
+    # Do the action
 state, reward = connection.get_state_reward(socket, "best_action")
 
-# updates q_table based on reward
+# Updates q_table based on reward
 
-# write q_table.txt
+# Write q_table.txt
