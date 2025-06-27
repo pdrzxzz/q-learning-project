@@ -1,6 +1,7 @@
 import connection
 import numpy as np
 import random as rd
+import time
 
 # Q-Learning parameters
 LEARNING_RATE = 0.1
@@ -108,17 +109,34 @@ socket = connection.connect(2037)
 if socket == 0: # If fail to connect
     exit() # Stop execution
 
-# Read data/q_table.txt
+# Initialize or Read data/q_table.txt
+q_table = Read_or_Create_Q_Table(value=100, boolean=False)
+num_episodes = 500
 
-# Read actual state
+# Read start state and reward
 state, reward = connection.get_state_reward(socket, "none")
+state = binary_to_position_id(state)
+current_state = Plataform(state, reward)
 
-# Take best action based on q_table
-    # Retrieves best action based on state
+# Game loop
+for episode in range(num_episodes):
+
+    state, reward = current_state.get()
+    # Take best action based on q_table
+    best_action = select_action(state)
+    best_action_index = np.argmax(q_table[state])
 
     # Do the action
-state, reward = connection.get_state_reward(socket, "best_action")
+    new_state, reward = connection.get_state_reward(socket, best_action)
+    new_state = binary_to_position_id(new_state)
 
-# Updates q_table based on reward
+    # Updates q_table based on reward
+    update_q_value(q_table, state, reward, new_state, best_action_index)
+    current_state.update(new_state, reward)
+    time.sleep(2)
+
+# Close the connection to the game
+connection.close(socket)
 
 # Write q_table.txt
+save_q_table(q_table, "data/new_q_table.txt")
