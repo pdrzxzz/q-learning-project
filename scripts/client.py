@@ -41,21 +41,21 @@ np.set_printoptions(precision=6)
 # - PPPPP: Platform ID (0 to 23, in binary)
 def binary_to_position_id(binary_state):
     return int(binary_state, 2)
+
 # select_action function selects an action based on epsilon-greedy strategy
 # If a random number is less than epsilon, it chooses a random action
 # Otherwise, it selects the action with the highest Q-value for the current state
 # action_list is a list of possible actions, and state_index is the index of the current
 # state in the Q-table
 # Returns the chosen action
-
-def select_action(epsilon, action_list, state_index):
-    if rd.random() < epsilon:
-        chosen_action = action_list[rd.randint(0, len(action_list) - 1)]
-        print(f"Random action chosen for state {state_index}: {chosen_action}")
+def select_action(state_index):
+    if rd.random() < EPSILON:
+        chosen_action = ACTIONS[rd.randint(0, len(ACTIONS) - 1)]
+        print(f"Random action chosen : {chosen_action}")
     else:
         best_action_index = np.argmax(q_table[state_index])
-        chosen_action = action_list[best_action_index]
-        print(f"Best action chosen for state {state_index}: {chosen_action}")
+        chosen_action = ACTIONS[best_action_index]
+        print(f"Best action chosen {DIRECTION[state_index%4]}: {chosen_action}")
     return chosen_action
 
 # The Bellman equation is used to update the Q-value for a given state-action pair
