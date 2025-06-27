@@ -85,14 +85,20 @@ def select_action(state_index):
 # of the next state, discounted by the discount factor gamma
 # r is the immediate reward, s_prime is the next state index, and gamma is the discount factor
 # Returns the target Q-value
-
-def bellman_equation(r, s_prime, gamma):
-    max_q = np.max(q_table[s_prime])
-    q_target = r + gamma * max_q
-    return q_target
-
-
-
+def update_q_value(q_table, current_state_index, reward, next_state_index, selected_action_index):    
+    # 1. Get the old Q-value for (current_state, action) and the specified index.
+    q_value = q_table[current_state_index, selected_action_index]
+    print(f"Q-value for action {ACTIONS[selected_action_index]}: {q_value}")
+    # 2. Find the maximum possible Q-value from the next state.
+    #    This is 'max Q(s', a')'. We look at all Q-values for next_state
+    #    (for the same value index) and take the largest.
+    future_max_value = np.max(q_table[next_state_index])
+    # 3. Calculate the new Q-value using the Bellman equation.
+    #    This is: R + γ * max Q(s', a')
+    new_q_value = q_value + LEARNING_RATE * (reward + DISCOUNT_FACTOR * future_max_value - q_value)
+    print(f"New Q-value for action {ACTIONS[selected_action_index]}: {new_q_value}")
+    # 4. Update the Q-table with the new calculated value.
+    q_table[current_state_index, selected_action_index] = new_q_value
 
 
 # Before running this, ensure to be running the game first (/windows_exec, /linux_exec, /max_exec).
