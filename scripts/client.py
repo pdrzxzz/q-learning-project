@@ -10,14 +10,26 @@ EPSILON = 0.8
 # Action mapping
 ACTIONS = ['left', 'right', 'jump']
 
+# Direction mapping
+DIRECTION = ['N', 'E', 'S', 'W']
 
+class Plataform:
+
+    def __init__(self, estado_inicial, recompensa_inicial):
+        self.state = estado_inicial
+        self.reward = recompensa_inicial
+
+    def update(self, novo_estado, nova_recompensa):
+        self.state = novo_estado
+        self.reward = nova_recompensa
+        print(f"State: {self.state}, Reward: {self.reward}")
+
+    def get(self):
+        return self.state, self.reward
+    
 # Load the Q-table
 q_table = np.loadtxt('data/q_table.txt', delimiter=',')
 np.set_printoptions(precision=6)
-
-# Initialize state and reward
-state_index = 0
-reward = -14
 
 # Converts a 7-bit binary state string to an integer index for the Q-table
 # State format: DDPPPPP (7 bits)
