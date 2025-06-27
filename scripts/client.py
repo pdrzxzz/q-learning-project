@@ -27,9 +27,31 @@ class Plataform:
     def get(self):
         return self.state, self.reward
     
-# Load the Q-table
-q_table = np.loadtxt('data/q_table.txt', delimiter=',')
-np.set_printoptions(precision=6)
+# Function to read or create a Q-table
+def Read_or_Create_Q_Table(value=1, boolean=False):
+    if(boolean):
+        # If boolean is True, load the Q-table from a file
+        try:
+            q_table = np.loadtxt('data/q_table.txt', delimiter=',')
+            np.set_printoptions(precision=6)
+            print("Q-table loaded successfully.")
+        except IOError:
+            print("Failed to load Q-table from file.")
+    else:
+        # If boolean is False, create a new Q-table with the specified value
+        numero_de_estados = 24
+        numero_de_direcao = 4
+        numero_de_valores = 3
+        q_table = np.zeros((numero_de_estados * numero_de_direcao, numero_de_valores), dtype=float)
+        q_table[:, -1] = value  # Set the jump column to the specified value
+    return q_table
+
+# Save q table to a file using NumPy's savetxt function
+def save_q_table(q_table, nome_do_arquivo):
+    # Salva o array no arquivo de texto
+    # fmt='%.8f' formata cada número como um float com 8 casas decimais
+    np.savetxt(nome_do_arquivo, q_table, fmt='%.6f', delimiter=' ')
+    print(f"(Alternativa) Q-table salva com sucesso em '{nome_do_arquivo}'!")
 
 # Converts a 7-bit binary state string to an integer index for the Q-table
 # State format: DDPPPPP (7 bits)
