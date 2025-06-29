@@ -6,9 +6,9 @@ import time
 # ================================
 # Q-Learning parameters
 # ================================
-LEARNING_RATE = 0.1         # Learning rate (alpha)
+LEARNING_RATE = 0.5         # Learning rate (alpha)
 DISCOUNT_FACTOR = 0.99      # Discount factor (gamma)
-EPSILON = 0.2               # Exploration rate (epsilon)
+EPSILON = 0.2                 # Exploration rate (epsilon)
 
 # ================================
 # Action and Direction mappings
@@ -39,7 +39,6 @@ class Platform:
         Returns the current state and reward.
         """
         return self.state, self.reward
-
 
 def read_or_create_q_table(new_file='data/new_q_table.txt',
                            initial_file='data/initial_q_table.txt',
@@ -79,13 +78,11 @@ def read_or_create_q_table(new_file='data/new_q_table.txt',
     except IOError:
         print(f"Could not load '{initial_file}'. Creating a new Q-table.")
 
-    # 3) If ambos falharam, cria uma tabela nova
+    # 3) If both fail, create a new table
     q_table = np.zeros((num_states * num_directions, num_actions), dtype=float)
     q_table[:, -1] = default_value
     print("New Q-table created with default jump values.")
     return q_table
-
-
 
 def save_q_table(q_table, filename):
     """
@@ -97,7 +94,6 @@ def save_q_table(q_table, filename):
     """
     np.savetxt(filename, q_table, fmt='%.6f', delimiter=' ')
     print(f"Q-table successfully saved to '{filename}'!")
-
 
 def binary_to_position_id(binary_state):
     """
@@ -120,8 +116,7 @@ def binary_to_position_id(binary_state):
     platform_id = int(binary_state[2:], 2)
     return direction * 24 + platform_id
 
-
-def select_action(state_index):
+def select_action(q_table, state_index):
     """
     Selects an action using an epsilon-greedy strategy.
 
@@ -132,14 +127,13 @@ def select_action(state_index):
         str: Selected action from ACTIONS.
     """
     if rd.random() < EPSILON:
-        chosen_action = ACTIONS[rd.randint(0, len(ACTIONS) - 1)]
+        chosen_action = rd.choice(ACTIONS)
         print(f"Random action chosen: {chosen_action}")
     else:
         best_action_index = np.argmax(q_table[state_index])
         chosen_action = ACTIONS[best_action_index]
         print(f"Best action chosen {DIRECTION[state_index % 4]}: {chosen_action}")
     return chosen_action
-
 
 def update_q_value(q_table, current_state_index, reward, next_state_index, selected_action_index):
     """
@@ -164,7 +158,6 @@ def update_q_value(q_table, current_state_index, reward, next_state_index, selec
 
     q_table[current_state_index, selected_action_index] = new_q_value
 
-
 # ================================
 # MAIN EXECUTION
 # ================================
@@ -177,8 +170,8 @@ if socket == 0:
 # Load or initialize Q-table
 q_table = read_or_create_q_table()
 
-# Number of training episodes
-num_episodes = 100
+# Number of training actions
+num_actions = 10000
 
 # Initialize environment state
 state_str, reward = connection.get_state_reward(socket, "none")
@@ -186,13 +179,13 @@ state_index = binary_to_position_id(state_str)
 current_state = Platform(state_index, reward)
 
 # Training loop
-for episode in range(num_episodes):
-    print(f"Episode: {episode}")
+for action in range(num_actions):
+    print(f"Action: {action}")
     
     state_index, reward = current_state.get()
     
     # Choose an action
-    selected_action = select_action(state_index)
+    selected_action = select_action(q_table, state_index)
     selected_action_index = ACTIONS.index(selected_action)
 
     # Execute action and get next state and reward
@@ -207,5 +200,3 @@ for episode in range(num_episodes):
 
     # Update internal state
     current_state.update(new_state_index, reward)
-
-    time.sleep(0.1)
