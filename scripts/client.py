@@ -41,31 +41,50 @@ class Platform:
         return self.state, self.reward
 
 
-def read_or_create_q_table(value=1, load_existing=False):
+def read_or_create_q_table(new_file='data/new_q_table.txt',
+                           initial_file='data/initial_q_table.txt',
+                           default_value=1):
     """
-    Loads a Q-table from file or creates a new one with specified initial values.
+    Tries to load the Q-table from `new_file`. 
+    If that fails, tries to load from `initial_file`. 
+    If ambos falham, cria uma Q-table zerada com a última coluna iniciada em default_value.
 
     Args:
-        value (float): Value to initialize the 'jump' column (last action).
-        load_existing (bool): Whether to load the Q-table from file or create a new one.
+        new_file (str): path to the newest Q-table.
+        initial_file (str): path to the backup/initial Q-table.
+        default_value (float): value to initialize the 'jump' column if creating from zero.
 
     Returns:
-        np.ndarray: Q-table matrix of shape (states * directions, actions)
+        np.ndarray: matriz da Q-table com shape (24*4, 3).
     """
-    if load_existing:
-        try:
-            q_table = np.loadtxt('data/q_table.txt', delimiter=' ')
-            np.set_printoptions(precision=6)
-            print("Q-table loaded successfully.")
-        except IOError:
-            print("Failed to load Q-table from file.")
-    else:
-        num_states = 24
-        num_directions = 4
-        num_actions = 3
-        q_table = np.zeros((num_states * num_directions, num_actions), dtype=float)
-        q_table[:, -1] = value  # Set the 'jump' column to the specified value
+    num_states     = 24
+    num_directions = 4
+    num_actions    = 3
+
+    # 1) Try to load the most recent table
+    try:
+        q_table = np.loadtxt(new_file, delimiter=' ')
+        np.set_printoptions(precision=6)
+        print(f"Loaded Q-table from '{new_file}'.")
+        return q_table
+    except IOError:
+        print(f"Could not load '{new_file}', trying '{initial_file}'...")
+
+    # 2) Fallback: try to load the initial table
+    try:
+        q_table = np.loadtxt(initial_file, delimiter=' ')
+        np.set_printoptions(precision=6)
+        print(f"Loaded Q-table from '{initial_file}'.")
+        return q_table
+    except IOError:
+        print(f"Could not load '{initial_file}'. Creating a new Q-table.")
+
+    # 3) If ambos falharam, cria uma tabela nova
+    q_table = np.zeros((num_states * num_directions, num_actions), dtype=float)
+    q_table[:, -1] = default_value
+    print("New Q-table created with default jump values.")
     return q_table
+
 
 
 def save_q_table(q_table, filename):
@@ -156,7 +175,7 @@ if socket == 0:
     exit()
 
 # Load or initialize Q-table
-q_table = read_or_create_q_table(value=100, load_existing=True)
+q_table = read_or_create_q_table()
 
 # Number of training episodes
 num_episodes = 100
@@ -183,10 +202,10 @@ for episode in range(num_episodes):
     # Update Q-table
     update_q_value(q_table, state_index, reward, new_state_index, selected_action_index)
 
+    # Save Q-table to file
+    save_q_table(q_table, "data/new_q_table.txt")
+
     # Update internal state
     current_state.update(new_state_index, reward)
 
     time.sleep(0.1)
-
-# Save Q-table to file
-save_q_table(q_table, "data/new_q_table.txt")
