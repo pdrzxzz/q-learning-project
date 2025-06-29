@@ -6,9 +6,9 @@ import time
 # ================================
 # Q-Learning parameters
 # ================================
-LEARNING_RATE = 0.5         # Learning rate (alpha)
+LEARNING_RATE = 0.2        # Learning rate (alpha)
 DISCOUNT_FACTOR = 0.99      # Discount factor (gamma)
-EPSILON = 0.2                 # Exploration rate (epsilon)
+EPSILON = 0               # Exploration rate (epsilon)
 
 # ================================
 # Action and Direction mappings
