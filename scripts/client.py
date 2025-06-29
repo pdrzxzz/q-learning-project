@@ -3,35 +3,56 @@ import numpy as np
 import random as rd
 import time
 
+# ================================
 # Q-Learning parameters
-LEARNING_RATE = 0.1
-DISCOUNT_FACTOR = 0.99
-EPSILON = 0.8
+# ================================
+LEARNING_RATE = 0.1         # Learning rate (alpha)
+DISCOUNT_FACTOR = 0.99      # Discount factor (gamma)
+EPSILON = 0.2               # Exploration rate (epsilon)
 
-# Action mapping
+# ================================
+# Action and Direction mappings
+# ================================
 ACTIONS = ['left', 'right', 'jump']
-
-# Direction mapping
 DIRECTION = ['N', 'E', 'S', 'W']
 
-class Plataform:
 
-    def __init__(self, estado_inicial, recompensa_inicial):
-        self.state = estado_inicial
-        self.reward = recompensa_inicial
+class Platform:
+    """
+    Class to represent the current state and reward of the environment.
+    """
 
-    def update(self, novo_estado, nova_recompensa):
-        self.state = novo_estado
-        self.reward = nova_recompensa
+    def __init__(self, initial_state, initial_reward):
+        self.state = initial_state
+        self.reward = initial_reward
+
+    def update(self, new_state, new_reward):
+        """
+        Updates the current state and reward.
+        """
+        self.state = new_state
+        self.reward = new_reward
         print(f"State: {self.state}, Reward: {self.reward}")
 
     def get(self):
+        """
+        Returns the current state and reward.
+        """
         return self.state, self.reward
-    
-# Function to read or create a Q-table
-def Read_or_Create_Q_Table(value=1, boolean=False):
-    if(boolean):
-        # If boolean is True, load the Q-table from a file
+
+
+def read_or_create_q_table(value=1, load_existing=False):
+    """
+    Loads a Q-table from file or creates a new one with specified initial values.
+
+    Args:
+        value (float): Value to initialize the 'jump' column (last action).
+        load_existing (bool): Whether to load the Q-table from file or create a new one.
+
+    Returns:
+        np.ndarray: Q-table matrix of shape (states * directions, actions)
+    """
+    if load_existing:
         try:
             q_table = np.loadtxt('data/q_table.txt', delimiter=' ')
             np.set_printoptions(precision=6)
@@ -39,101 +60,133 @@ def Read_or_Create_Q_Table(value=1, boolean=False):
         except IOError:
             print("Failed to load Q-table from file.")
     else:
-        # If boolean is False, create a new Q-table with the specified value
-        numero_de_estados = 24
-        numero_de_direcao = 4
-        numero_de_valores = 3
-        q_table = np.zeros((numero_de_estados * numero_de_direcao, numero_de_valores), dtype=float)
-        q_table[:, -1] = value  # Set the jump column to the specified value
+        num_states = 24
+        num_directions = 4
+        num_actions = 3
+        q_table = np.zeros((num_states * num_directions, num_actions), dtype=float)
+        q_table[:, -1] = value  # Set the 'jump' column to the specified value
     return q_table
 
-# Save q table to a file using NumPy's savetxt function
-def save_q_table(q_table, nome_do_arquivo):
-    # Salva o array no arquivo de texto
-    # fmt='%.8f' formata cada número como um float com 8 casas decimais
-    np.savetxt(nome_do_arquivo, q_table, fmt='%.6f', delimiter=' ')
-    print(f"Q-table salva com sucesso em '{nome_do_arquivo}'!")
 
-# Converts a 7-bit binary state string to an integer index for the Q-table
-# State format: DDPPPPP (7 bits)
-# - DD: Direction bits
-#       00 = North
-#       01 = East
-#       10 = South
-#       11 = West
-# - PPPPP: Platform ID (0 to 23, in binary)
+def save_q_table(q_table, filename):
+    """
+    Saves the Q-table to a file using NumPy's savetxt function.
+
+    Args:
+        q_table (np.ndarray): The Q-table matrix.
+        filename (str): Path to the output file.
+    """
+    np.savetxt(filename, q_table, fmt='%.6f', delimiter=' ')
+    print(f"Q-table successfully saved to '{filename}'!")
+
+
 def binary_to_position_id(binary_state):
-    return int(binary_state, 2)
+    """
+    Converts a 7-bit binary state string to an integer index for the Q-table.
 
-# select_action function selects an action based on epsilon-greedy strategy
-# If a random number is less than epsilon, it chooses a random action
-# Otherwise, it selects the action with the highest Q-value for the current state
-# action_list is a list of possible actions, and state_index is the index of the current
-# state in the Q-table
-# Returns the chosen action
+    Binary format: DDPPPPP
+    - DD: Direction bits (00=N, 01=E, 10=S, 11=W)
+    - PPPPP: Platform ID (0–23)
+
+    Args:
+        binary_state (str): State string, e.g., '0b0101101'
+
+    Returns:
+        int: Index in the Q-table
+    """
+    if binary_state.startswith("0b"):
+        binary_state = binary_state[2:]
+
+    direction = int(binary_state[:2], 2)
+    platform_id = int(binary_state[2:], 2)
+    return direction * 24 + platform_id
+
+
 def select_action(state_index):
+    """
+    Selects an action using an epsilon-greedy strategy.
+
+    Args:
+        state_index (int): Current state index in Q-table.
+
+    Returns:
+        str: Selected action from ACTIONS.
+    """
     if rd.random() < EPSILON:
         chosen_action = ACTIONS[rd.randint(0, len(ACTIONS) - 1)]
-        print(f"Random action chosen : {chosen_action}")
+        print(f"Random action chosen: {chosen_action}")
     else:
         best_action_index = np.argmax(q_table[state_index])
         chosen_action = ACTIONS[best_action_index]
-        print(f"Best action chosen {DIRECTION[state_index%4]}: {chosen_action}")
+        print(f"Best action chosen {DIRECTION[state_index % 4]}: {chosen_action}")
     return chosen_action
 
-# The Bellman equation is used to update the Q-value for a given state-action pair
-# It calculates the target Q-value based on the immediate reward and the maximum Q-value
-# of the next state, discounted by the discount factor gamma
-# r is the immediate reward, s_prime is the next state index, and gamma is the discount factor
-# Returns the target Q-value
-def update_q_value(q_table, current_state_index, reward, next_state_index, selected_action_index):    
-    # 1. Get the old Q-value for (current_state, action) and the specified index.
+
+def update_q_value(q_table, current_state_index, reward, next_state_index, selected_action_index):
+    """
+    Updates the Q-value for the current state-action pair using the Bellman equation.
+
+    Q(s,a) = Q(s,a) + α * (r + γ * max(Q(s',a')) - Q(s,a))
+
+    Args:
+        q_table (np.ndarray): The Q-table.
+        current_state_index (int): Index of current state.
+        reward (float): Immediate reward.
+        next_state_index (int): Index of next state.
+        selected_action_index (int): Index of the action taken.
+    """
     q_value = q_table[current_state_index, selected_action_index]
     print(f"Q-value for action {ACTIONS[selected_action_index]}: {q_value}")
-    # 2. Find the maximum possible Q-value from the next state.
-    #    This is 'max Q(s', a')'. We look at all Q-values for next_state
-    #    (for the same value index) and take the largest.
+
     future_max_value = np.max(q_table[next_state_index])
-    # 3. Calculate the new Q-value using the Bellman equation.
-    #    This is: R + γ * max Q(s', a')
+
     new_q_value = q_value + LEARNING_RATE * (reward + DISCOUNT_FACTOR * future_max_value - q_value)
     print(f"New Q-value for action {ACTIONS[selected_action_index]}: {new_q_value}")
-    # 4. Update the Q-table with the new calculated value.
+
     q_table[current_state_index, selected_action_index] = new_q_value
 
 
-# Before running this, ensure to be running the game first (/windows_exec, /linux_exec, /max_exec).
+# ================================
+# MAIN EXECUTION
+# ================================
 
-# Connect to game
+# Make sure the game server is running (windows_exec, linux_exec, etc.)
 socket = connection.connect(2037)
-if socket == 0: # If fail to connect
-    exit() # Stop execution
+if socket == 0:
+    exit()
 
-# Initialize or Read data/q_table.txt
-q_table = Read_or_Create_Q_Table(value=100, boolean=True)
+# Load or initialize Q-table
+q_table = read_or_create_q_table(value=100, load_existing=True)
+
+# Number of training episodes
 num_episodes = 100
 
-# Read start state and reward
-state, reward = connection.get_state_reward(socket, "none")
-state = binary_to_position_id(state)
-current_state = Plataform(state, reward)
+# Initialize environment state
+state_str, reward = connection.get_state_reward(socket, "none")
+state_index = binary_to_position_id(state_str)
+current_state = Platform(state_index, reward)
 
-# Game loop
+# Training loop
 for episode in range(num_episodes):
-    print("episode:", episode)
-    state, reward = current_state.get()
-    # Take best action based on q_table
-    best_action = select_action(state)
-    best_action_index = np.argmax(q_table[state])
+    print(f"Episode: {episode}")
+    
+    state_index, reward = current_state.get()
+    
+    # Choose an action
+    selected_action = select_action(state_index)
+    selected_action_index = ACTIONS.index(selected_action)
 
-    # Do the action
-    new_state, reward = connection.get_state_reward(socket, best_action)
-    new_state = binary_to_position_id(new_state)
+    # Execute action and get next state and reward
+    new_state_str, reward = connection.get_state_reward(socket, selected_action)
+    new_state_index = binary_to_position_id(new_state_str)
 
-    # Updates q_table based on reward
-    update_q_value(q_table, state, reward, new_state, best_action_index)
-    current_state.update(new_state, reward)
+    # Update Q-table
+    update_q_value(q_table, state_index, reward, new_state_index, selected_action_index)
+
+    # Update internal state
+    current_state.update(new_state_index, reward)
+
     time.sleep(0.1)
 
-# Write q_table.txt
+# Save Q-table to file
 save_q_table(q_table, "data/new_q_table.txt")
