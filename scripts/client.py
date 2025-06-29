@@ -33,7 +33,7 @@ def Read_or_Create_Q_Table(value=1, boolean=False):
     if(boolean):
         # If boolean is True, load the Q-table from a file
         try:
-            q_table = np.loadtxt('data/q_table.txt', delimiter=',')
+            q_table = np.loadtxt('data/q_table.txt', delimiter=' ')
             np.set_printoptions(precision=6)
             print("Q-table loaded successfully.")
         except IOError:
@@ -52,7 +52,7 @@ def save_q_table(q_table, nome_do_arquivo):
     # Salva o array no arquivo de texto
     # fmt='%.8f' formata cada número como um float com 8 casas decimais
     np.savetxt(nome_do_arquivo, q_table, fmt='%.6f', delimiter=' ')
-    print(f"(Alternativa) Q-table salva com sucesso em '{nome_do_arquivo}'!")
+    print(f"Q-table salva com sucesso em '{nome_do_arquivo}'!")
 
 # Converts a 7-bit binary state string to an integer index for the Q-table
 # State format: DDPPPPP (7 bits)
@@ -110,8 +110,8 @@ if socket == 0: # If fail to connect
     exit() # Stop execution
 
 # Initialize or Read data/q_table.txt
-q_table = Read_or_Create_Q_Table(value=100, boolean=False)
-num_episodes = 500
+q_table = Read_or_Create_Q_Table(value=100, boolean=True)
+num_episodes = 100
 
 # Read start state and reward
 state, reward = connection.get_state_reward(socket, "none")
@@ -120,7 +120,7 @@ current_state = Plataform(state, reward)
 
 # Game loop
 for episode in range(num_episodes):
-
+    print("episode:", episode)
     state, reward = current_state.get()
     # Take best action based on q_table
     best_action = select_action(state)
@@ -133,10 +133,7 @@ for episode in range(num_episodes):
     # Updates q_table based on reward
     update_q_value(q_table, state, reward, new_state, best_action_index)
     current_state.update(new_state, reward)
-    time.sleep(2)
-
-# Close the connection to the game
-connection.close(socket)
+    time.sleep(0.1)
 
 # Write q_table.txt
 save_q_table(q_table, "data/new_q_table.txt")
