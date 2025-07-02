@@ -1,14 +1,13 @@
 import connection
 import numpy as np
 import random as rd
-import time
 
 # ================================
 # Q-Learning parameters
 # ================================
-LEARNING_RATE = 0.2        # Learning rate (alpha)
-DISCOUNT_FACTOR = 0.99      # Discount factor (gamma)
-EPSILON = 0               # Exploration rate (epsilon)
+LEARNING_RATE = 0.5        # Learning rate (alpha)
+DISCOUNT_FACTOR = 0.5     # Discount factor (gamma)
+EPSILON = 0.3               # Exploration rate (epsilon)
 
 # ================================
 # Action and Direction mappings
@@ -41,8 +40,7 @@ class Platform:
         return self.state, self.reward
 
 def read_or_create_q_table(new_file='data/new_q_table.txt',
-                           initial_file='data/initial_q_table.txt',
-                           default_value=1):
+                           initial_file='data/initial_q_table.txt'):
     """
     Tries to load the Q-table from `new_file`. 
     If that fails, tries to load from `initial_file`. 
@@ -69,19 +67,9 @@ def read_or_create_q_table(new_file='data/new_q_table.txt',
     except IOError:
         print(f"Could not load '{new_file}', trying '{initial_file}'...")
 
-    # 2) Fallback: try to load the initial table
-    try:
-        q_table = np.loadtxt(initial_file, delimiter=' ')
-        np.set_printoptions(precision=6)
-        print(f"Loaded Q-table from '{initial_file}'.")
-        return q_table
-    except IOError:
-        print(f"Could not load '{initial_file}'. Creating a new Q-table.")
-
-    # 3) If both fail, create a new table
+    # 2) If not new_q_table, creates a new one
     q_table = np.zeros((num_states * num_directions, num_actions), dtype=float)
-    q_table[:, -1] = default_value
-    print("New Q-table created with default jump values.")
+    print("New Q-table created.")
     return q_table
 
 def save_q_table(q_table, filename):
@@ -93,7 +81,7 @@ def save_q_table(q_table, filename):
         filename (str): Path to the output file.
     """
     np.savetxt(filename, q_table, fmt='%.6f', delimiter=' ')
-    print(f"Q-table successfully saved to '{filename}'!")
+    # print(f"Q-table successfully saved to '{filename}'!")
 
 def binary_to_position_id(binary_state):
     """
@@ -112,9 +100,8 @@ def binary_to_position_id(binary_state):
     if binary_state.startswith("0b"):
         binary_state = binary_state[2:]
 
-    direction = int(binary_state[:2], 2)
-    platform_id = int(binary_state[2:], 2)
-    return direction * 24 + platform_id
+    print('binary_state:', binary_state)
+    return int(binary_state, 2)
 
 def select_action(q_table, state_index):
     """
@@ -149,12 +136,12 @@ def update_q_value(q_table, current_state_index, reward, next_state_index, selec
         selected_action_index (int): Index of the action taken.
     """
     q_value = q_table[current_state_index, selected_action_index]
-    print(f"Q-value for action {ACTIONS[selected_action_index]}: {q_value}")
+    # print(f"Q-value for action {ACTIONS[selected_action_index]}: {q_value}")
 
     future_max_value = np.max(q_table[next_state_index])
 
     new_q_value = q_value + LEARNING_RATE * (reward + DISCOUNT_FACTOR * future_max_value - q_value)
-    print(f"New Q-value for action {ACTIONS[selected_action_index]}: {new_q_value}")
+    # print(f"New Q-value for action {ACTIONS[selected_action_index]}: {new_q_value}")
 
     q_table[current_state_index, selected_action_index] = new_q_value
 
@@ -171,7 +158,7 @@ if socket == 0:
 q_table = read_or_create_q_table()
 
 # Number of training actions
-num_actions = 10000
+num_actions = 100000
 
 # Initialize environment state
 state_str, reward = connection.get_state_reward(socket, "none")
@@ -179,7 +166,7 @@ state_index = binary_to_position_id(state_str)
 current_state = Platform(state_index, reward)
 
 # Training loop
-for action in range(num_actions):
+for i, action in enumerate(range(num_actions)):
     print(f"Action: {action}")
     
     state_index, reward = current_state.get()
@@ -197,6 +184,6 @@ for action in range(num_actions):
 
     # Save Q-table to file
     save_q_table(q_table, "data/new_q_table.txt")
-
+    
     # Update internal state
     current_state.update(new_state_index, reward)

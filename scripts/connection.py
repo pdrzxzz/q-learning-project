@@ -24,7 +24,7 @@ def get_state_reward(s, action):
     if(action in ["jump", "left", "right"]):  # Only if valid action
         s.send(str(action).encode())  # Send the action (as string) to the server encoded as bytes
     
-    print("action:", action)  # Print the action sent/requested
+    # print("action:", action)  # Print the action sent/requested
     
     data = ""  # Variable to hold the received raw data as a string
     data_recv = False  # Flag to indicate whether valid data has been received
@@ -47,7 +47,7 @@ def get_state_reward(s, action):
     state = data['estado']       # 'estado' means state, e.g., "00" = North, "01" = East, etc.
     reward = data['recompensa']  # 'recompensa' means reward, a negative integer between -14 and -1
 
-    print("state:", state)  # Print the current state
-    print("reward:", reward)  # Print the received reward
+    # print("state:", state)  # Print the current state
+    # print("reward:", reward)  # Print the received reward
 
     return state, reward  # Return the state and reward as a tuple
