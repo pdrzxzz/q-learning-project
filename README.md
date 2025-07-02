@@ -135,7 +135,7 @@ O script exibe informações em tempo real:
 
 ## 👨‍💻 Autores
 
-Aline Acioly  
-Emanuel Pedroza  
-Julio Sobral
+- Aline Acioly  
+- Emanuel Pedroza  
+- Julio Sobral
 
