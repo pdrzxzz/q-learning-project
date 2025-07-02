@@ -5,9 +5,9 @@ import random as rd
 # ================================
 # Q-Learning parameters
 # ================================
-LEARNING_RATE = 0.5        # Learning rate (alpha)
-DISCOUNT_FACTOR = 0.5     # Discount factor (gamma)
-EPSILON = 0.3               # Exploration rate (epsilon)
+LEARNING_RATE = 0.1       # Learning rate (alpha)
+DISCOUNT_FACTOR = 0.8     # Discount factor (gamma)
+EPSILON = 1               # Exploration rate (epsilon)
 
 # ================================
 # Action and Direction mappings
@@ -31,7 +31,7 @@ class Platform:
         """
         self.state = new_state
         self.reward = new_reward
-        print(f"State: {self.state}, Reward: {self.reward}")
+        # print(f"State: {self.state}, Reward: {self.reward}")
 
     def get(self):
         """
@@ -100,7 +100,7 @@ def binary_to_position_id(binary_state):
     if binary_state.startswith("0b"):
         binary_state = binary_state[2:]
 
-    print('binary_state:', binary_state)
+    # print('binary_state:', binary_state)
     return int(binary_state, 2)
 
 def select_action(q_table, state_index):
@@ -115,11 +115,11 @@ def select_action(q_table, state_index):
     """
     if rd.random() < EPSILON:
         chosen_action = rd.choice(ACTIONS)
-        print(f"Random action chosen: {chosen_action}")
+        # print(f"Random action chosen: {chosen_action}")
     else:
         best_action_index = np.argmax(q_table[state_index])
         chosen_action = ACTIONS[best_action_index]
-        print(f"Best action chosen {DIRECTION[state_index % 4]}: {chosen_action}")
+        # print(f"Best action chosen {DIRECTION[state_index % 4]}: {chosen_action}")
     return chosen_action
 
 def update_q_value(q_table, current_state_index, reward, next_state_index, selected_action_index):
@@ -165,11 +165,16 @@ state_str, reward = connection.get_state_reward(socket, "none")
 state_index = binary_to_position_id(state_str)
 current_state = Platform(state_index, reward)
 
+total_reward = 0
+action_count = 0
 # Training loop
-for i, action in enumerate(range(num_actions)):
-    print(f"Action: {action}")
+for action in range(num_actions):
+    action_count += 1
+    EPSILON -= 0.00005
+    # print(f"Action: {action}")
     
     state_index, reward = current_state.get()
+    total_reward += reward
     
     # Choose an action
     selected_action = select_action(q_table, state_index)
@@ -181,9 +186,17 @@ for i, action in enumerate(range(num_actions)):
 
     # Update Q-table
     update_q_value(q_table, state_index, reward, new_state_index, selected_action_index)
-
-    # Save Q-table to file
-    save_q_table(q_table, "data/new_q_table.txt")
+    
+    if (action+1)% 500 == 0:
+        avg_reward = total_reward / action_count
+        total_reward = 0
+        action_count = 0
+        print("ACtion: ", action)
+        print("Learning Rate: ", LEARNING_RATE)
+        print("Epsilon: ", EPSILON)
+        print("Average Reward: ", avg_reward)
+        # Save Q-table to file
+        save_q_table(q_table, "data/new_q_table.txt")
     
     # Update internal state
     current_state.update(new_state_index, reward)
