@@ -18,6 +18,8 @@ Este projeto utiliza Q-Learning para treinar um agente que navega entre platafor
 
 ```
 Qlearning/
+├── __pycache__/            # Cache do Python
+├── executables/            # Executáveis do ambiente
 ├── scripts/
 │   ├── client.py           # Script principal do agente Q-Learning
 │   └── connection.py       # Módulo de conexão TCP com o servidor
@@ -25,7 +27,8 @@ Qlearning/
 │   ├── initial_q_table.txt # Q-table inicial (zeros)
 │   └── new_q_table.txt     # Q-table atualizada após treinamento
 ├── LICENSE                 # Licença MIT
-└── README.md              # Este arquivo
+├── README.md              # Este arquivo
+└── specifications.pdf     # Especificações do projeto
 ```
 
 ## ⚙️ Parâmetros de Configuração
@@ -122,8 +125,17 @@ O script exibe informações em tempo real:
 - Direção do agente
 - Progresso do treinamento
 
+## 🤝 Contribuindo
+
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
 ## 👨‍💻 Autores
 
-Aline Acioly
-Emanuel Pedroza
+Aline Acioly  
+Emanuel Pedroza  
 Julio Sobral
+
