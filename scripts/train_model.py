@@ -7,7 +7,7 @@ import numpy as np
 # ================================
 LEARNING_RATE = 0.1       # Learning rate (alpha) -> MODEL CONVERGENCE # NÃO AUMENTAR
 DISCOUNT_FACTOR = 0.95     # Discount factor (gamma) -> RELATIVE TO PROBLEM
-EPSILON = 0               # Exploration rate (epsilon) -> TRAINING MUTÁVEL
+EPSILON = 0.2              # Exploration rate (epsilon) -> TRAINING MUTÁVEL
 
 # ================================
 # Action and Direction mappings
@@ -63,7 +63,7 @@ for action in range(num_actions):
     # Update Q-table
     update_q_value(q_table, state_index, reward, new_state_index, selected_action_index, LEARNING_RATE, DISCOUNT_FACTOR)
     
-    if (action_count+1)% 100 == 0:
+    if (action_count+1)% 200 == 0:
         avg_reward = total_reward / action_count
         total_reward = 0
         action_count = 0
