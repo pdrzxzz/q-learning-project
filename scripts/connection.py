@@ -1,4 +1,5 @@
 import socket  # Import the socket module to enable TCP/IP networking
+import time
 
 # Creates a TCP connection
 def connect(port):
@@ -23,6 +24,7 @@ def get_state_reward(s, action):
     # Only send action to the server if it's valid
     if(action in ["jump", "left", "right"]):  # Only if valid action
         s.send(str(action).encode())  # Send the action (as string) to the server encoded as bytes
+        time.sleep(0.1) # Control speed
     
     # print("action:", action)  # Print the action sent/requested
     
