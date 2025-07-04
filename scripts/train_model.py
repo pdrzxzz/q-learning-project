@@ -6,7 +6,7 @@ import connection
 # ================================
 LEARNING_RATE = 0.1       # Learning rate (alpha) -> MODEL CONVERGENCE # NÃO AUMENTAR
 DISCOUNT_FACTOR = 0.8     # Discount factor (gamma) -> RELATIVE TO PROBLEM
-EPSILON = 0.2               # Exploration rate (epsilon) -> TRAINING MUTÁVEL
+EPSILON = 0               # Exploration rate (epsilon) -> TRAINING MUTÁVEL
 
 # ================================
 # Action and Direction mappings
